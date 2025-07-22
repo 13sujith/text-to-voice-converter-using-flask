@@ -1,0 +1,43 @@
+from flask import Flask, render_template, request, jsonify
+import speech_recognition as sr
+from pydub import AudioSegment
+import os
+import uuid
+
+app = Flask(__name__)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['audio']
+    ext = file.filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+
+    if ext != 'wav':
+        audio = AudioSegment.from_file(filepath)
+        filepath_wav = filepath.replace(ext, 'wav')
+        audio.export(filepath_wav, format='wav')
+    else:
+        filepath_wav = filepath
+
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(filepath_wav) as source:
+        audio_data = recognizer.record(source)
+        try:
+            text = recognizer.recognize_google(audio_data)
+        except sr.UnknownValueError:
+            text = "Could not understand audio."
+        except sr.RequestError:
+            text = "API unavailable."
+
+    return jsonify({'text': text})
+
+if __name__ == '__main__':
+    app.run(debug=True)
