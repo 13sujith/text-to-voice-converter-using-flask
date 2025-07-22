@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice to Text</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 40px; background-color: #1e1e1e; color: white; }
+        textarea { width: 60%; height: 150px; margin-top: 20px; }
+        button { padding: 10px 20px; margin: 10px; }
+    </style>
+    <style><style>
+    body { 
+        font-family: Arial; 
+        text-align: center; 
+        margin-top: 40px; 
+        background-color: white; 
+        color: blueviolet; 
+    }
+    textarea { 
+        width: 60%; 
+        height: 150px; 
+        margin-top: 20px; 
+        background-color: #f9f9f9;
+        color: blueviolet;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+    button { 
+        padding: 10px 20px; 
+        margin: 10px; 
+        background-color: #00ff48;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #00b306;
+    }
+    input[type="file"] {
+        margin: 10px;
+        padding: 5px;
+    }
+    hr {
+        border: 1px solid #ddd;
+        margin: 30px 0;
+    }
+    h2, h3 {
+        color: #333333;
+    }
+</style></style>
+</head>
+<body>
+
+<h2>🎤 Voice to Text Converter</h2>
+
+<button onclick="startRecording()">Start Voice Input</button>
+<p><strong>Live Transcription:</strong></p>
+<textarea id="liveText" readonly></textarea>
+
+<hr>
+<h3>📁 Upload Audio File (MP3/WAV)</h3>
+<input type="file" id="audioFile">
+<button onclick="uploadAudio()">Upload & Convert</button>
+<p><strong>Uploaded File Transcription:</strong></p>
+<textarea id="uploadText" readonly></textarea>
+
+<script>
+    function startRecording() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.start();
+
+        recognition.onresult = function(event) {
+            document.getElementById("liveText").value = event.results[0][0].transcript;
+        };
+
+        recognition.onerror = function(event) {
+            alert("Error occurred: " + event.error);
+        };
+    }
+
+    function uploadAudio() {
+        const fileInput = document.getElementById("audioFile");
+        const formData = new FormData();
+        formData.append('audio', fileInput.files[0]);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+        .then(data => {
+            document.getElementById("uploadText").value = data.text;
+        });
+    }
+</script>
+
+</body>
+</html>
